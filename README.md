@@ -46,7 +46,7 @@ Pastikan Anda sudah menginstal:
 Jalankan perintah berikut di terminal Anda:
 ```bash
 git clone <repository_url>
-cd dompet_elektronik
+cd okanehoshi
 flutter pub get
 ```
 
