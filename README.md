@@ -45,7 +45,7 @@ Pastikan Anda sudah menginstal:
 ### 2. Kloning & Mengunduh Dependency
 Jalankan perintah berikut di terminal Anda:
 ```bash
-git clone <repository_url>
+git clone https://github.com/NFebri/okanehoshi.git
 cd okanehoshi
 flutter pub get
 ```
