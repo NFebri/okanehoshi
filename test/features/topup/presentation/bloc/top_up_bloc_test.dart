@@ -100,5 +100,39 @@ void main() {
 
       await future;
     });
+
+    test('emits [TopUpLoading, TopUpFailure] on ConflictException (stale retry limit)', () async {
+      when(() => mockTopUpRepository.topUp(amount)).thenThrow(
+        ConflictException('Request sedang diproses, silakan coba lagi.'),
+      );
+
+      final expectedStates = [
+        isA<TopUpLoading>(),
+        isA<TopUpFailure>().having((s) => s.message, 'message', 'Request sedang diproses, silakan coba lagi.'),
+      ];
+
+      final future = expectLater(topUpBloc.stream, emitsInOrder(expectedStates));
+
+      topUpBloc.add(const TopUpSubmitted(amount));
+
+      await future;
+    });
+
+    test('emits [TopUpLoading, TopUpFailure] on IdempotencyKeyReusedException', () async {
+      when(() => mockTopUpRepository.topUp(amount)).thenThrow(
+        IdempotencyKeyReusedException('Terjadi konflik data, silakan ulangi operasi.'),
+      );
+
+      final expectedStates = [
+        isA<TopUpLoading>(),
+        isA<TopUpFailure>().having((s) => s.message, 'message', 'Terjadi konflik data, silakan ulangi operasi.'),
+      ];
+
+      final future = expectLater(topUpBloc.stream, emitsInOrder(expectedStates));
+
+      topUpBloc.add(const TopUpSubmitted(amount));
+
+      await future;
+    });
   });
 }

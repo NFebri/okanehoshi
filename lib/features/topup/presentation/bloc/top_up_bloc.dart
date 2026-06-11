@@ -25,6 +25,10 @@ class TopUpBloc extends Bloc<TopUpEvent, TopUpState> {
       }
     } on ValidationException catch (e) {
       emit(TopUpFailure(e.message, errors: e.errors));
+    } on ConflictException catch (e) {
+      emit(TopUpFailure(e.message));
+    } on IdempotencyKeyReusedException catch (e) {
+      emit(TopUpFailure(e.message));
     } on ApiException catch (e) {
       emit(TopUpFailure(e.message));
     } catch (e) {

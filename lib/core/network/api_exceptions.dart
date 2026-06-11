@@ -41,3 +41,14 @@ class RateLimitException extends ApiException {
 class UnknownException extends ApiException {
   UnknownException(super.message, [super.statusCode]);
 }
+
+class ConflictException extends ApiException {
+  ConflictException([String message = 'Request sedang diproses, silakan coba lagi.'])
+      : super(message, 409);
+}
+
+class IdempotencyKeyReusedException extends ApiException {
+  IdempotencyKeyReusedException([
+    String message = 'Terjadi konflik data, silakan ulangi operasi.',
+  ]) : super(message, 422);
+}

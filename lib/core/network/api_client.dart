@@ -4,6 +4,7 @@ import '../constants/api_constants.dart';
 import '../constants/app_constants.dart';
 import 'api_exceptions.dart';
 import 'api_interceptor.dart';
+import 'idempotency_interceptor.dart';
 import 'retry_interceptor.dart';
 
 class ApiClient {
@@ -21,6 +22,7 @@ class ApiClient {
     final storage = secureStorage ?? const FlutterSecureStorage();
     _dio.interceptors.addAll([
       ApiInterceptor(storage),
+      IdempotencyInterceptor(),
       RetryInterceptor(dio: _dio),
     ]);
   }
@@ -95,7 +97,13 @@ class ApiClient {
           return UnauthorizedException(message);
         } else if (statusCode == 404) {
           return NotFoundException(message);
+        } else if (statusCode == 409) {
+          return ConflictException(message);
         } else if (statusCode == 422) {
+          if (data is Map<String, dynamic> &&
+              data['error_code'] == 'IDEMPOTENCY_KEY_REUSED') {
+            return IdempotencyKeyReusedException(message);
+          }
           Map<String, List<String>> errors = {};
           if (data is Map<String, dynamic> && data.containsKey('errors')) {
             final errs = data['errors'];

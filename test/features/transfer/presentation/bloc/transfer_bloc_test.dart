@@ -128,5 +128,55 @@ void main() {
 
       await future;
     });
+
+    test('emits [TransferLoading, TransferFailure] on ConflictException (stale retry limit)', () async {
+      when(() => mockTransferRepository.transfer(
+            identifier: identifier,
+            amount: amount,
+            note: note,
+          )).thenThrow(
+        ConflictException('Request sedang diproses, silakan coba lagi.'),
+      );
+
+      final expectedStates = [
+        isA<TransferLoading>(),
+        isA<TransferFailure>().having((s) => s.message, 'message', 'Request sedang diproses, silakan coba lagi.'),
+      ];
+
+      final future = expectLater(transferBloc.stream, emitsInOrder(expectedStates));
+
+      transferBloc.add(const TransferSubmitted(
+        identifier: identifier,
+        amount: amount,
+        note: note,
+      ));
+
+      await future;
+    });
+
+    test('emits [TransferLoading, TransferFailure] on IdempotencyKeyReusedException', () async {
+      when(() => mockTransferRepository.transfer(
+            identifier: identifier,
+            amount: amount,
+            note: note,
+          )).thenThrow(
+        IdempotencyKeyReusedException('Terjadi konflik data, silakan ulangi operasi.'),
+      );
+
+      final expectedStates = [
+        isA<TransferLoading>(),
+        isA<TransferFailure>().having((s) => s.message, 'message', 'Terjadi konflik data, silakan ulangi operasi.'),
+      ];
+
+      final future = expectLater(transferBloc.stream, emitsInOrder(expectedStates));
+
+      transferBloc.add(const TransferSubmitted(
+        identifier: identifier,
+        amount: amount,
+        note: note,
+      ));
+
+      await future;
+    });
   });
 }

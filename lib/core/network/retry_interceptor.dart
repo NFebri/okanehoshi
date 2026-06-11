@@ -25,13 +25,22 @@ class RetryInterceptor extends Interceptor {
         err.type == DioExceptionType.receiveTimeout ||
         err.type == DioExceptionType.connectionError;
 
+    final isIdempotencyConflict = err.response?.statusCode == 409;
+
     final retryCount = requestOptions.extra['retry_count'] as int? ?? 0;
 
-    if (isTimeoutOrConnection && retryCount < maxRetries) {
+    if ((isTimeoutOrConnection || isIdempotencyConflict) && retryCount < maxRetries) {
       final nextRetryCount = retryCount + 1;
       requestOptions.extra['retry_count'] = nextRetryCount;
 
-      await Future<void>.delayed(retryDelay);
+      final retryAfterHeader = err.response?.headers.value('retry-after');
+      final retryAfterSeconds =
+          retryAfterHeader != null ? int.tryParse(retryAfterHeader) : null;
+      final delay = retryAfterSeconds != null
+          ? Duration(seconds: retryAfterSeconds)
+          : retryDelay;
+
+      await Future<void>.delayed(delay);
 
       try {
         final response = await dio.request<dynamic>(

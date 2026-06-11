@@ -29,6 +29,10 @@ class TransferBloc extends Bloc<TransferEvent, TransferState> {
       }
     } on ValidationException catch (e) {
       emit(TransferFailure(e.message, errors: e.errors));
+    } on ConflictException catch (e) {
+      emit(TransferFailure(e.message));
+    } on IdempotencyKeyReusedException catch (e) {
+      emit(TransferFailure(e.message));
     } on ApiException catch (e) {
       emit(TransferFailure(e.message));
     } catch (e) {
